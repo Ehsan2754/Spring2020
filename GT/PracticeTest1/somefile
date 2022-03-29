@@ -1,0 +1,54 @@
+from sortedcontainers import SortedDict
+class Bot:
+
+    def __init__(self, day, month, year):
+        self.max_num = day + month + year
+        self.max_moves = day + month
+
+        self.winning_moves, self.winning_strategy = [], SortedDict()
+
+        self._backward_induction(950)
+
+    
+    def _backward_induction(self, num_moves):
+        """
+        Returns winning positions for the given number of moves
+        :param num_moves: number of moves
+        :return: list of winning positions if the player only has num_moves
+        """
+        if num_moves == 0:
+            return []
+
+        next_winning_moves = self._backward_induction(num_moves - 1)
+
+        cur_winning_moves = list(range(self.max_num - self.max_moves, self.max_num))
+        cur_winning_strategy = {first_move: self.max_num for first_move in cur_winning_moves}
+
+        for next_move in next_winning_moves:
+            for cur_move in range(next_move - self.max_moves - 1, next_move):
+                if cur_move < 1 or cur_move in self.winning_moves:
+                    continue
+
+                winning_move = False
+                for possible_next_move in range(cur_move + 1, cur_move + self.max_moves + 1):
+
+                    if possible_next_move > self.max_num:
+                        continue
+                    if possible_next_move < next_winning_moves[0] - 1:
+                        continue
+                    if possible_next_move not in next_winning_moves:
+                        winning_move = True
+                        cur_winning_strategy[cur_move] = possible_next_move
+                        break
+
+                if winning_move:
+                    cur_winning_moves.append(cur_move)
+
+        self.winning_strategy.update(cur_winning_strategy)
+        self.winning_moves += cur_winning_moves
+
+        return sorted(list(set(cur_winning_moves)))
+if __name__ == "__main__":
+    bot = Bot(9,12,1999)
+    with open('./othergame.log', 'w+') as f:
+        f.write(str(bot.winning_strategy))
